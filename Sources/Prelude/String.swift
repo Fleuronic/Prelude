@@ -11,16 +11,25 @@ public extension String {
 		return matchedRange.map { .init(self[$0]) }
 	}
 
-	func date(for year: Int = 1999) throws -> Date? {
+	func matches(in regex: NSRegularExpression) -> [String] {
+		let range = NSRange(startIndex..<endIndex, in: self)
+		return regex
+			.matches(in: self, range: range)
+			.compactMap { Range($0.range, in: self) }
+			.map { .init(self[$0]) }
+	}
+
+	func date(forYear year: Int? = 1999) throws -> Date? {
 		var date: Date? = nil
-		let string = "\(self)/\(year)"
+		let string = year.map { "\(self)/\($0)" } ?? self
 		let range = NSRange(string.startIndex..<string.endIndex, in: string)
 		let detector = try Self.dateDetector.get()
 		for result in detector.matches(in: string, options: [], range: range) {
 			date = result.date
 			if date != nil { break }
 		}
-		return date
+
+		return date.flatMap { Calendar.current.date(byAdding: .hour, value: 4, to: $0) }
 	}
 
 	func year() -> Int? {
@@ -30,6 +39,8 @@ public extension String {
 	}
 
 	func cityState() throws -> (String, String)? {
+		guard self.contains(",") else { return nil }
+
 		var cityState: (String, String)? = nil
 		let string = "\(String.addressLead) \(String.sampleStreetAddress), \(self) \(String.sampleZipCode)"
 		let range = NSRange(string.startIndex..<string.endIndex, in: string)
@@ -71,3 +82,4 @@ private extension String {
 private extension NSRegularExpression {
 	static var year: Self { try! .init(pattern: "([0-9]{4})") }
 }
+
