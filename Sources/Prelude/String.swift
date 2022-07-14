@@ -28,8 +28,7 @@ public extension String {
 			date = result.date
 			if date != nil { break }
 		}
-
-		return date.flatMap { Calendar.current.date(byAdding: .hour, value: 4, to: $0) }
+		return date
 	}
 
 	func year() -> Int? {
